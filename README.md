@@ -2,7 +2,7 @@
 
 MUSEA est une galerie virtuelle 3D interactive développée avec Three.js. Elle permet de découvrir une petite collection d'objets numériques (modèles `.glb`) et de composer sa propre exposition, pièce par pièce, en les plaçant sur des socles dans une salle immersive.
 
-🔗 **Démo en ligne :** [[![Netlify Status](https://api.netlify.com/api/v1/badges/dc18ae72-cd31-465f-b897-55858ca19028/deploy-status)](https://app.netlify.com/projects/musea-2026/deploys)]
+🔗 **Démo en ligne :** https://musea-2026.netlify.app
 
 ## Aperçu
 
