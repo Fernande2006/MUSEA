@@ -1,0 +1,523 @@
+/* ============================================================
+   PALETTE — "Musée Contemporain" (v3)
+   Fond charbon FROID (pas brun) pour rester élégant et neutre.
+   Accent doré/ambre plutôt qu'orange (évite la dérive "rouge/sale"
+   du brun + orange brûlé ensemble). Touche de bleu marine en
+   accent secondaire pour un peu de fraîcheur/contraste.
+   ============================================================ */
+:root {
+  --bg-fond:        #16181D; /* charbon froid, neutre — plus clair que le tout premier noir, mais pas brun */
+  --panneau:        #1E2128; /* panneaux/barres */
+  --panneau-clair:  #272B34; /* survol, cartes */
+  --bordure:        #383C46; /* bordures visibles */
+
+  --texte:          #F2EFE8; /* crème clair, neutre */
+  --texte-discret:  #9C9AA3; /* gris froid pour texte secondaire */
+
+  --accent:         #D6A24A; /* doré/ambre — chaud mais pas rouge, contraste net sur le fond froid */
+  --accent-clair:   #E8BE72; /* variante claire, survol */
+  --accent-secondaire: #4A6FA5; /* bleu ardoise — pour badges/catégories, apporte de la fraîcheur */
+  --contraste:      #09152D; /* bleu marine profond — touche ponctuelle */
+}
+
+/* Reset simple : on enlève les marges par défaut du navigateur */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* pas de scroll, la scène 3D remplit l'écran */
+  background: var(--bg-fond);
+  color: var(--texte);
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Le canvas prend TOUT l'écran, en arrière-plan */
+#scene-3d {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: block;
+}
+
+/* ============================================================
+   ÉCRAN D'INTRO
+   ============================================================ */
+#intro-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--bg-fond);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  transition: opacity 0.8s ease;
+}
+
+#intro-screen.hidden {
+  opacity: 0;
+  pointer-events: none; /* laisse passer les clics vers la scène 3D une fois caché */
+}
+
+/* Animation d'entrée : chaque élément apparaît en fondu + léger glissement vers le haut,
+   avec un délai différent pour chacun (effet "en cascade") */
+@keyframes intro-apparition {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.intro-logo {
+  font-size: 2.6rem;
+  font-weight: 300;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--texte);
+  opacity: 0; /* état de départ avant l'animation */
+  animation: intro-apparition 0.9s ease forwards;
+  animation-delay: 0.15s;
+}
+
+.intro-logo span {
+  color: var(--accent);
+}
+
+.intro-tagline {
+  font-size: 0.85rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--texte-discret);
+  margin-bottom: 18px;
+  opacity: 0;
+  animation: intro-apparition 0.9s ease forwards;
+  animation-delay: 0.45s;
+}
+
+.intro-quote {
+  font-size: 0.95rem;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+  margin-bottom: 30px;
+  opacity: 0;
+  animation: intro-apparition 0.9s ease forwards;
+  animation-delay: 0.75s;
+}
+
+#intro-enter {
+  padding: 13px 34px;
+  background: none;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.25s, color 0.25s;
+  opacity: 0;
+  animation: intro-apparition 0.9s ease forwards;
+  animation-delay: 1.05s;
+}
+
+#intro-enter:hover {
+  background: var(--accent);
+  color: var(--bg-fond);
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+#ui-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 40px;
+  background: linear-gradient(to bottom, rgba(22,24,29,0.92) 0%, rgba(22,24,29,0.6) 60%, transparent 100%);
+  pointer-events: none; /* la scène 3D reste cliquable en dessous */
+}
+
+/* Bloc de gauche : logo + tagline */
+.header-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--texte);
+}
+
+.logo span {
+  color: var(--accent); /* le point final du logo, en accent */
+}
+
+.tagline {
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--texte-discret);
+}
+
+/* Bloc de droite : navigation + compteur d'objets */
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  pointer-events: all;
+}
+
+.header-nav .nav-link {
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--texte-discret);
+  text-decoration: none;
+  transition: color 0.2s;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.header-nav .nav-link:hover,
+.header-nav .nav-link.active {
+  color: var(--accent);
+}
+
+/* Petit badge qui affiche le nombre d'objets exposés */
+#object-counter {
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  color: var(--bg-fond);
+  background: var(--accent);
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+/* Bandeau d'instructions, sous le header, discret */
+#instructions-bar {
+  position: fixed;
+  top: 68px;
+  left: 40px;
+  z-index: 10;
+  font-size: 0.78rem;
+  color: var(--texte-discret);
+  border-left: 2px solid var(--accent);
+  padding-left: 12px;
+  pointer-events: none;
+  max-width: 480px;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   PANNEAU COLLECTION (liste des objets à poser, à gauche)
+   ============================================================ */
+#collection-panel {
+  position: fixed;
+  top: 118px;
+  left: 40px;
+  z-index: 15;
+  width: 240px;
+  background: rgba(30, 33, 40, 0.9);
+  border: 1px solid var(--bordure);
+  border-radius: 4px;
+  padding: 20px;
+  pointer-events: all;
+}
+
+.collection-title {
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--texte);
+}
+
+.collection-sub {
+  font-size: 0.72rem;
+  color: var(--texte-discret);
+  margin-top: 2px;
+  margin-bottom: 14px;
+}
+
+#collection-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.collection-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 10px 12px;
+  border: 1px solid var(--bordure);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.collection-item:hover {
+  border-color: var(--accent);
+  background: var(--panneau-clair);
+}
+
+.collection-item.selected {
+  border-color: var(--accent);
+  background: var(--panneau-clair);
+}
+
+.collection-item .item-nom {
+  font-size: 0.85rem;
+  color: var(--texte);
+}
+
+.collection-item .item-categorie {
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.collection-hint {
+  margin-top: 14px;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: var(--texte-discret);
+}
+
+/* ============================================================
+   BOUTON RESET
+   ============================================================ */
+#reset-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 15;
+  padding: 10px 18px;
+  background: var(--panneau);
+  border: 1px solid var(--bordure);
+  color: var(--texte-discret);
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+#reset-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ============================================================
+   MODAL "À PROPOS"
+   ============================================================ */
+#about-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: rgba(8, 9, 11, 0.75);
+  display: none; /* affiché en JS via .visible */
+  align-items: center;
+  justify-content: center;
+}
+
+#about-overlay.visible {
+  display: flex;
+}
+
+#about-modal {
+  position: relative;
+  width: min(420px, 90vw);
+  background: var(--panneau);
+  border: 1px solid var(--bordure);
+  border-radius: 4px;
+  padding: 40px;
+}
+
+#about-modal h2 {
+  font-size: 1.4rem;
+  font-weight: 300;
+  letter-spacing: 0.15em;
+  margin-bottom: 8px;
+}
+
+.about-lead {
+  color: var(--accent);
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+
+#about-modal p:not(.about-lead) {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--texte-discret);
+}
+
+#about-close {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  background: none;
+  border: none;
+  color: var(--texte-discret);
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+#about-close:hover {
+  color: var(--accent);
+}
+
+/* ============================================================
+   FICHE D'INFO D'UN OBJET (panneau latéral)
+   ============================================================ */
+#info-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 320px;
+  z-index: 20;
+  background: rgba(30, 33, 40, 0.97);
+  border-left: 1px solid var(--bordure);
+  padding: 100px 32px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  /* Caché par défaut : décalé hors écran à droite */
+  transform: translateX(100%);
+  transition: transform 0.35s ease;
+}
+
+#info-panel.visible {
+  transform: translateX(0);
+}
+
+#info-close {
+  position: absolute;
+  top: 32px;
+  right: 28px;
+  background: none;
+  border: none;
+  color: var(--texte-discret);
+  font-size: 1.4rem;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+#info-close:hover {
+  color: var(--accent);
+}
+
+#info-nom {
+  font-size: 1.3rem;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  border-left: 2px solid var(--accent);
+  padding-left: 14px;
+}
+
+#info-categorie {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  padding-left: 16px;
+}
+
+#info-description {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--texte-discret);
+  padding-left: 16px;
+}
+
+#info-view {
+  margin-top: 8px;
+  margin-left: 16px;
+  align-self: flex-start;
+  padding: 9px 18px;
+  background: none;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+#info-view:hover {
+  background: var(--accent);
+  color: var(--bg-fond);
+}
+
+.info-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-left: 16px;
+  margin-top: 8px;
+}
+
+.info-actions button {
+  align-self: flex-start;
+  padding: 9px 18px;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+#info-view {
+  background: none;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+
+#info-view:hover {
+  background: var(--accent);
+  color: var(--bg-fond);
+}
+
+#info-remove {
+  background: none;
+  border: 1px solid var(--bordure);
+  color: var(--texte-discret);
+}
+
+#info-remove:hover {
+  border-color: #b5544a;
+  color: #d97468;
+}
+
+/* ============================================================
+   BARRE DU BAS — supprimée (remplacée par #collection-panel à gauche)
+   ============================================================ */

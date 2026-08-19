@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Musée Virtuel 3D</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Écran d'intro : plein écran, au-dessus de tout, disparaît au clic sur "Entrer" -->
+  <div id="intro-screen">
+    <div class="intro-logo">MUSEA<span>.</span></div>
+    <div class="intro-tagline">Galerie virtuelle d'exposition</div>
+    <p class="intro-quote">Explorez. Sélectionnez. Exposez.</p>
+    <button id="intro-enter">Entrer dans le musée</button>
+  </div>
+
+  <!-- Header : logo/tagline à gauche, nav + compteur à droite -->
+  <header id="ui-header">
+    <div class="header-brand">
+      <div class="logo">MUSEA<span>.</span></div>
+      <div class="tagline">Galerie virtuelle d'exposition</div>
+    </div>
+
+    <nav class="header-nav">
+      <button class="nav-link active">Exposition</button>
+      <button class="nav-link" id="nav-about">À propos</button>
+      <span id="object-counter">0 objet exposé</span>
+    </nav>
+  </header>
+
+  <!-- Bandeau d'instructions, sous le header -->
+  <div id="instructions-bar">
+    Sélectionnez une pièce dans la collection, puis cliquez sur un socle pour l'exposer dans la galerie.
+  </div>
+
+  <!-- C'est ICI que Three.js va dessiner la scène 3D -->
+  <!-- Le <canvas> est comme une "toile" sur laquelle on dessine en 3D -->
+  <canvas id="scene-3d"></canvas>
+
+  <!-- Fiche d'info d'un objet, cachée par défaut, affichée au clic sur un objet posé -->
+  <aside id="info-panel">
+    <button id="info-close" aria-label="Fermer">&times;</button>
+    <h2 id="info-nom"></h2>
+    <p id="info-categorie"></p>
+    <p id="info-description"></p>
+    <div class="info-actions">
+      <button id="info-view">Voir l'objet</button>
+      <button id="info-remove">Retirer de l'exposition</button>
+    </div>
+  </aside>
+
+  <!-- Panneau Collection, à gauche : liste des objets qu'on peut poser -->
+  <aside id="collection-panel">
+    <div class="collection-title">Collection</div>
+    <div class="collection-sub" id="collection-count">0 objet disponible</div>
+    <ul id="collection-list"><!-- rempli par main.js --></ul>
+    <p class="collection-hint">Cliquez sur une pièce, puis sur un socle pour l'exposer.</p>
+  </aside>
+
+  <!-- Bouton de réinitialisation, en bas à droite -->
+  <button id="reset-btn">Réinitialiser l'exposition</button>
+
+  <!-- Modal "À propos", caché par défaut -->
+  <div id="about-overlay">
+    <div id="about-modal">
+      <button id="about-close" aria-label="Fermer">&times;</button>
+      <h2>MUSEA</h2>
+      <p class="about-lead">Explorez. Sélectionnez. Exposez.</p>
+      <p>MUSEA est une galerie virtuelle 3D interactive qui permet de découvrir une collection d'objets numériques et de composer sa propre exposition, pièce par pièce.</p>
+    </div>
+  </div>
+
+  <!--
+    IMPORTMAP : ça dit au navigateur où trouver la librairie "three"
+    quand on écrit `import * as THREE from 'three'` dans main.js.
+    On charge Three.js directement depuis un CDN, pas besoin d'installer quoi que ce soit.
+  -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <!-- type="module" = on peut utiliser import/export dans notre JS -->
+  <script type="module" src="main.js"></script>
+
+</body>
+</html>
