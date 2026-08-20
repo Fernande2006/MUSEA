@@ -145,7 +145,7 @@ html, body {
   align-items: center;
   justify-content: space-between;
   padding: 16px 40px;
-  background: linear-gradient(to bottom, rgba(22,24,29,0.92) 0%, rgba(22,24,29,0.6) 60%, transparent 100%);
+  background: linear-gradient(to bottom, rgba(22,24,29,0.95) 0%, rgba(22,24,29,0.88) 75%, transparent 100%);
   pointer-events: none; /* la scène 3D reste cliquable en dessous */
 }
 
@@ -215,12 +215,14 @@ html, body {
 #instructions-bar {
   position: fixed;
   top: 68px;
-  left: 40px;
+  left: 940px;
   z-index: 10;
   font-size: 0.78rem;
   color: var(--texte-discret);
   border-left: 2px solid var(--accent);
-  padding-left: 12px;
+  padding: 6px 12px;
+  background: rgba(22, 24, 29, 0.75); /* fond propre : lisible même sur une scène claire */
+  border-radius: 0 3px 3px 0;
   pointer-events: none;
   max-width: 480px;
   line-height: 1.5;
@@ -235,6 +237,8 @@ html, body {
   left: 40px;
   z-index: 15;
   width: 240px;
+  max-height: calc(100vh - 150px); /* laisse de la marge en bas, quel que soit le nombre de pièces */
+  overflow-y: auto; /* scroll interne si la liste dépasse (7+ pièces) */
   background: rgba(30, 33, 40, 0.9);
   border: 1px solid var(--bordure);
   border-radius: 4px;
@@ -294,6 +298,19 @@ html, body {
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--accent);
+}
+
+.collection-section-titre {
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--texte-discret);
+  margin-top: 10px;
+  margin-bottom: 2px;
+}
+
+.collection-section-titre:first-child {
+  margin-top: 0;
 }
 
 .collection-hint {
@@ -406,6 +423,7 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  overflow-y: auto; /* évite que la vidéo fasse déborder le panneau hors écran */
 
   /* Caché par défaut : décalé hors écran à droite */
   transform: translateX(100%);
@@ -454,6 +472,34 @@ html, body {
   line-height: 1.6;
   color: var(--texte-discret);
   padding-left: 16px;
+}
+
+#info-video {
+  display: none; /* affiché en JS uniquement si l'objet a une vidéo (fichier direct) */
+  width: calc(100% - 16px);
+  margin-left: 16px;
+  border-radius: 3px;
+  background: #000;
+}
+
+/* Wrapper en ratio 16:9 pour l'iframe (Dailymotion, YouTube...) */
+#info-video-embed-wrapper {
+  display: none; /* affiché en JS uniquement si l'objet a un lien "videoEmbed" */
+  margin-left: 16px;
+  width: calc(100% - 16px);
+  position: relative;
+  padding-top: 56.25%; /* 16:9 */
+  border-radius: 3px;
+  overflow: hidden;
+  background: #000;
+}
+
+#info-video-embed {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
 }
 
 #info-view {

@@ -1,8 +1,5 @@
-
-// Une scène Three.js a TOUJOURS besoin de 3 choses minimum :
-//   1. Une SCÈNE      -> le "monde" où on place les objets
-//   2. Une CAMÉRA      -> le point de vue du visiteur
-//   3. Un RENDERER    -> celui qui dessine (rend) la scène dans le <canvas>
+// ============================================================
+// ÉTAPE 1 : LA SCÈNE 3D DE BASE
 // ============================================================
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -10,25 +7,24 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 // ---- 1. LA SCÈNE ----
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xe4e4e0); // gris très clair, ambiance galerie lumineuse
-scene.fog = new THREE.Fog(0xe4e4e0, 18, 40);   // brouillard quasi imperceptible, juste pour adoucir le lointain
+scene.background = new THREE.Color(0xe4e4e0);
+scene.fog = new THREE.Fog(0xe4e4e0, 15, 26);
 
 // ---- 2. LA CAMÉRA ----
-// PerspectiveCamera(angle de vue, ratio largeur/hauteur, distance min visible, distance max visible)
 const camera = new THREE.PerspectiveCamera(
   50,
   window.innerWidth / window.innerHeight,
   0.1,
   100
 );
-camera.position.set(0, 3, 7); // (x, y, z) -> un peu en hauteur, reculée
+camera.position.set(0, 3, 5); // repositionnée pour rester DANS la salle désormais fermée sur ses 4 côtés
 
 // ---- 3. LE RENDERER ----
 const canvas = document.getElementById('scene-3d');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // netteté sur écrans Retina, sans exagérer (perf)
-renderer.shadowMap.enabled = true; // active les ombres portées
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
 
 // ============================================================
 // ÉCRAN D'INTRO
@@ -38,109 +34,158 @@ const introEnter = document.getElementById('intro-enter');
 
 introEnter.addEventListener('click', () => {
   introScreen.classList.add('hidden');
-  // On attend la fin du fondu (0.8s défini en CSS) avant de le retirer du flux
   setTimeout(() => { introScreen.style.display = 'none'; }, 800);
 });
 
 // ============================================================
 // LES CONTRÔLES DE CAMÉRA (souris)
 // ============================================================
-// OrbitControls permet à l'utilisateur de tourner autour de la scène
-// avec la souris (clic gauche = tourner, molette = zoom, clic droit = déplacer)
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;      // mouvement "fluide" avec inertie
+controls.enableDamping = true;
 controls.dampingFactor = 0.05;
-controls.maxPolarAngle = Math.PI / 2.1; // empêche de passer sous le sol
-controls.minDistance = 3;
-controls.maxDistance = 7.8; // reste à l'intérieur des murs (rayon 8.2)
-controls.target.set(0, 1, 0); // le point autour duquel la caméra tourne
+controls.maxPolarAngle = Math.PI / 2.1;
+controls.minDistance = 2.5;
+controls.maxDistance = 6.3; // ⚠️ volontairement réduit : reste TOUJOURS à l'intérieur des 4 murs, quel que soit l'angle
+controls.target.set(0, 1, 0);
 
 // ============================================================
 // LA LUMIÈRE
 // ============================================================
-// Sans lumière, les objets 3D apparaissent noirs (sauf matériaux "basic").
-// On combine plusieurs types de lumière pour un effet "galerie d'art" :
-
-// Lumière ambiante forte et neutre : c'est elle qui donne l'effet "galerie lumineuse"
-// (à l'inverse de la version sombre, ici l'ambiance porte la majorité de la lumière,
-// les spots ne font qu'accentuer légèrement)
 const ambient = new THREE.AmbientLight(0xffffff, 0.85);
 scene.add(ambient);
 
-// Lumière directionnelle douce, façon "lumière de jour filtrée" (verrière/plafond lumineux)
 const jour = new THREE.DirectionalLight(0xffffff, 0.6);
 jour.position.set(3, 10, 4);
 jour.castShadow = true;
 jour.shadow.mapSize.set(1024, 1024);
 scene.add(jour);
 
-// Spot doré au-dessus, gardé mais très atténué : juste un accent chaud sur le socle central
 const spot = new THREE.SpotLight(0xfff2d9, 22, 20, Math.PI / 6, 0.5, 1.5);
 spot.position.set(0, 8, 2);
 spot.castShadow = true;
 spot.shadow.mapSize.set(1024, 1024);
 scene.add(spot);
-scene.add(spot.target); // le spot pointe vers spot.target.position (par défaut : 0,0,0)
+scene.add(spot.target);
+
+// ============================================================
+// DIMENSIONS DE LA SALLE (pièce rectangulaire)
+// ============================================================
+const salleLargeur = 14;
+const salleProfondeur = 12;
+const salleHauteur = 6.5;
 
 // ============================================================
 // LE SOL DU MUSÉE
 // ============================================================
-const floorGeometry = new THREE.CircleGeometry(8, 64); // cercle plutôt qu'un carré, plus "galerie"
+const floorGeometry = new THREE.PlaneGeometry(salleLargeur, salleProfondeur);
 const floorMaterial = new THREE.MeshStandardMaterial({
-  color: 0xcfd0cc, // gris clair poli, façon sol de galerie
+  color: 0xcfd0cc,
   roughness: 0.35,
   metalness: 0.15,
 });
 const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-floor.rotation.x = -Math.PI / 2; // on couche le cercle à plat (il est vertical par défaut)
-floor.receiveShadow = true;      // le sol peut recevoir des ombres
+floor.rotation.x = -Math.PI / 2;
+floor.receiveShadow = true;
 scene.add(floor);
 
-// Petit cercle doré fin pour marquer le bord du sol (touche esthétique liée à --accent)
-const ringGeometry = new THREE.RingGeometry(7.9, 8, 64);
-const ringMaterial = new THREE.MeshBasicMaterial({ color: 0xc9a24a, side: THREE.DoubleSide });
-const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-ring.rotation.x = -Math.PI / 2;
-ring.position.y = 0.01; // légèrement au-dessus du sol pour éviter le "z-fighting" (scintillement)
-scene.add(ring);
-
 // ============================================================
-// LES MURS DE LA SALLE
+// LES MURS DE LA SALLE — 4 murs, la pièce est maintenant COMPLÈTEMENT FERMÉE
 // ============================================================
-// Un cylindre géant, ouvert en haut et en bas, qu'on regarde DE L'INTÉRIEUR.
-// THREE.BackSide = on affiche la face intérieure du cylindre (sinon invisible
-// depuis l'intérieur, car par défaut Three.js n'affiche que les faces extérieures).
-const muRayon = 8.2; // légèrement plus grand que le sol (rayon 8)
-const muHauteur = 6.5;
-const wallGeometry = new THREE.CylinderGeometry(muRayon, muRayon, muHauteur, 64, 1, true);
+// side: THREE.DoubleSide en filet de sécurité : même si la caméra se retrouvait
+// du "mauvais côté" d'un mur, il resterait visible (avant, avec FrontSide,
+// un mur devenait invisible dès qu'on le regardait par l'arrière — c'est ce qui
+// causait la disparition des murs que tu as remarquée).
 const wallMaterial = new THREE.MeshStandardMaterial({
-  color: 0x1a1c22, // blanc cassé, façon mur de galerie
+  color: 0xf2f1ec, // blanc cassé — corrigé, c'était resté sur une couleur sombre par erreur
   roughness: 0.85,
   metalness: 0,
-  side: THREE.BackSide,
+  side: THREE.DoubleSide,
 });
-const murs = new THREE.Mesh(wallGeometry, wallMaterial);
-murs.position.y = muHauteur / 2; // le cylindre est centré sur son axe, on le remonte pour qu'il parte du sol
-murs.receiveShadow = true;
-scene.add(murs);
 
-// Un plafond simple (disque) pour fermer la salle — clair aussi, façon verrière lumineuse
-const plafondGeometry = new THREE.CircleGeometry(muRayon, 64);
-const plafondMaterial = new THREE.MeshStandardMaterial({ color: 0xf7f6f2, roughness: 0.9, side: THREE.BackSide });
-const plafond = new THREE.Mesh(plafondGeometry, plafondMaterial);
-plafond.rotation.x = Math.PI / 2;
-plafond.position.y = muHauteur;
-scene.add(plafond);
+const murFond = new THREE.Mesh(new THREE.PlaneGeometry(salleLargeur, salleHauteur), wallMaterial);
+murFond.position.set(0, salleHauteur / 2, -salleProfondeur / 2);
+murFond.receiveShadow = true;
+scene.add(murFond);
 
-// Bandeau doré discret à mi-hauteur des murs, pour rythmer l'espace (esthétique galerie)
-const bandeauGeometry = new THREE.CylinderGeometry(muRayon - 0.02, muRayon - 0.02, 0.03, 64, 1, true);
-const bandeauMaterial = new THREE.MeshBasicMaterial({ color: 0xc9a24a, side: THREE.BackSide, transparent: true, opacity: 0.6 });
-const bandeau = new THREE.Mesh(bandeauGeometry, bandeauMaterial);
-bandeau.position.y = 2.6;
-scene.add(bandeau);
+// Mur d'entrée (NOUVEAU) — ferme le 4e côté
+const murEntree = new THREE.Mesh(new THREE.PlaneGeometry(salleLargeur, salleHauteur), wallMaterial);
+murEntree.position.set(0, salleHauteur / 2, salleProfondeur / 2);
+murEntree.rotation.y = Math.PI;
+murEntree.receiveShadow = true;
+scene.add(murEntree);
+
+const murGauche = new THREE.Mesh(new THREE.PlaneGeometry(salleProfondeur, salleHauteur), wallMaterial);
+murGauche.position.set(-salleLargeur / 2, salleHauteur / 2, 0);
+murGauche.rotation.y = Math.PI / 2;
+murGauche.receiveShadow = true;
+scene.add(murGauche);
+
+const murDroit = new THREE.Mesh(new THREE.PlaneGeometry(salleProfondeur, salleHauteur), wallMaterial);
+murDroit.position.set(salleLargeur / 2, salleHauteur / 2, 0);
+murDroit.rotation.y = -Math.PI / 2;
+murDroit.receiveShadow = true;
+scene.add(murDroit);
 
 // ============================================================
-// QUELQUES LUMIÈRES D'APPOINT (fill lights douces, pour éviter les zones grises)
+// LE PLAFOND
+// ============================================================
+const plafondGeometry = new THREE.PlaneGeometry(salleLargeur, salleProfondeur);
+const plafondMaterial = new THREE.MeshStandardMaterial({ color: 0xf7f6f2, roughness: 0.9, side: THREE.DoubleSide });
+const plafond = new THREE.Mesh(plafondGeometry, plafondMaterial);
+plafond.rotation.x = Math.PI / 2;
+plafond.position.y = salleHauteur;
+scene.add(plafond);
+
+// Bandeau doré discret à mi-hauteur, sur les 4 murs
+const bandeauMaterial = new THREE.MeshBasicMaterial({ color: 0xc9a24a, side: THREE.DoubleSide });
+function ajouterBandeau(largeur, x, z, rotationY) {
+  const bandeau = new THREE.Mesh(new THREE.PlaneGeometry(largeur, 0.03), bandeauMaterial);
+  bandeau.position.set(x, 2.6, z);
+  bandeau.rotation.y = rotationY;
+  scene.add(bandeau);
+}
+ajouterBandeau(salleLargeur, 0, -salleProfondeur / 2 + 0.01, 0);
+ajouterBandeau(salleLargeur, 0, salleProfondeur / 2 - 0.01, 0);
+ajouterBandeau(salleProfondeur, -salleLargeur / 2 + 0.01, 0, Math.PI / 2);
+ajouterBandeau(salleProfondeur, salleLargeur / 2 - 0.01, 0, -Math.PI / 2);
+
+// ============================================================
+// EMPLACEMENTS MURAUX POUR LES TABLEAUX
+// ============================================================
+const emplacementsMuraux = [
+  { x: -3.5, y: 3, z: -salleProfondeur / 2 + 0.03, rotationY: 0, occupe: false, mesh: null },
+  { x: 0,    y: 3, z: -salleProfondeur / 2 + 0.03, rotationY: 0, occupe: false, mesh: null },
+  { x: 3.5,  y: 3, z: -salleProfondeur / 2 + 0.03, rotationY: 0, occupe: false, mesh: null },
+  { x: -salleLargeur / 2 + 0.03, y: 3, z: -2.5, rotationY: Math.PI / 2, occupe: false, mesh: null },
+  { x: -salleLargeur / 2 + 0.03, y: 3, z: 2.5,  rotationY: Math.PI / 2, occupe: false, mesh: null },
+  { x: salleLargeur / 2 - 0.03, y: 3, z: -2.5, rotationY: -Math.PI / 2, occupe: false, mesh: null },
+  { x: salleLargeur / 2 - 0.03, y: 3, z: 2.5,  rotationY: -Math.PI / 2, occupe: false, mesh: null },
+];
+
+function creerRepereEmplacement(emplacement) {
+  const largeur = 1.3, hauteur = 1.6;
+  const fondGeometry = new THREE.PlaneGeometry(largeur, hauteur);
+  const fondMaterial = new THREE.MeshBasicMaterial({ color: 0xc9a24a, transparent: true, opacity: 0.16, side: THREE.DoubleSide });
+  const fond = new THREE.Mesh(fondGeometry, fondMaterial);
+
+  const contourGeometry = new THREE.EdgesGeometry(fondGeometry);
+  const contourMaterial = new THREE.LineBasicMaterial({ color: 0xc9a24a });
+  const contour = new THREE.LineSegments(contourGeometry, contourMaterial);
+
+  const groupe = new THREE.Group();
+  groupe.add(fond, contour);
+  groupe.position.set(emplacement.x, emplacement.y, emplacement.z);
+  groupe.rotation.y = emplacement.rotationY;
+  scene.add(groupe);
+
+  emplacement.repere = fond;
+  emplacement.repereGroupe = groupe;
+}
+
+emplacementsMuraux.forEach(creerRepereEmplacement);
+
+// ============================================================
+// QUELQUES LUMIÈRES D'APPOINT
 // ============================================================
 const spotMural1 = new THREE.SpotLight(0xffffff, 14, 15, Math.PI / 5, 0.6, 1.2);
 spotMural1.position.set(-6, 5, -4);
@@ -153,22 +198,18 @@ spotMural2.target.position.set(6, 0, -6);
 scene.add(spotMural2, spotMural2.target);
 
 // ============================================================
+// SOCLES
 // ============================================================
-// SOCLES (chacun peut recevoir un objet — on clique dessus pour poser)
-// ============================================================
-// Gardés dans un gris foncé : par contraste avec le sol/murs clairs, ils
-// ressortent bien et guident l'œil (comme les socles gris de ta référence).
 const socleGeometry = new THREE.CylinderGeometry(0.55, 0.6, 0.9, 32);
 const socleMaterial = new THREE.MeshStandardMaterial({ color: 0x3a3d42, roughness: 0.45, metalness: 0.25 });
 const socleHauteur = 0.9;
 
 const positionsSocles = [
-  [0, -3],   // socle du fond, centré
-  [-3.2, 1], // socle gauche
-  [3.2, 1],  // socle droit
+  [0, -3],
+  [-3.2, 1],
+  [3.2, 1],
 ];
 
-// On garde une référence à chaque socle + s'il est déjà occupé
 const socles = positionsSocles.map(([x, z]) => {
   const socle = new THREE.Mesh(socleGeometry, socleMaterial);
   socle.position.set(x, socleHauteur / 2, z);
@@ -179,73 +220,126 @@ const socles = positionsSocles.map(([x, z]) => {
 });
 
 // ============================================================
-// ÉTAPE 2 : LE CATALOGUE D'OBJETS À EXPOSER
+// LE CATALOGUE DES SCULPTURES
 // ============================================================
-// Un tableau JS qui décrit chaque objet disponible.
-// Pour l'instant on n'en a qu'un, mais c'est déjà structuré pour
-// en accueillir plusieurs à l'étape 3 (il suffira d'ajouter des lignes ici).
-const catalogue = [
+
+const catalogueSculptures = [
   {
     id: 'dodo',
     nom: 'Le Dodo',
-    fichier: 'models/dodo_model.glb', // ⚠️ ajuste ce nom si ton fichier s'appelle autrement
+    fichier: 'models/dodo_model.glb',
     categorie: 'Histoire naturelle',
     annee: 'Espèce éteinte (XVIIe s.)',
     description: "Reconstitution numérique du dodo (Raphus cucullatus), oiseau originaire de l'île Maurice, aujourd'hui éteint. Il est devenu le symbole de la disparition des espèces causée par l'activité humaine et de la fragilité des écosystèmes insulaires.",
+    videoEmbed: 'https://www.dailymotion.com/embed/video/xrj4gs', 
   },
   {
     id: 'lion_skull',
     nom: 'Crâne de lion',
-    fichier: 'models/objet2.glb', // ⚠️ ajuste ce nom si ton fichier s'appelle autrement
+    fichier: 'models/objet2.glb',
     categorie: 'Ostéologie',
-    annee: 'Spécimen d\'étude',
+    annee: "Spécimen d'étude",
     description: "Étude ostéologique d'un crâne de lion (Panthera leo). La structure crânienne — mâchoires puissantes, orbites orientées vers l'avant — illustre l'anatomie d'un grand prédateur adapté à la chasse.",
+    videoEmbed: 'https://www.youtube.com/embed/P59er5TsvoI', 
   },
   {
     id: 'buste_roza',
     nom: 'Buste de Roza Loewenfeld',
-    fichier: 'models/sculpture_bust_of_roza_loewenfeld.glb', // ⚠️ ajuste ce nom si ton fichier s'appelle autrement
+    fichier: 'models/sculpture_bust_of_roza_loewenfeld.glb',
     categorie: 'Sculpture',
     annee: '—',
     description: "Portrait sculpté dans la tradition du buste commémoratif. L'œuvre capture l'expression et le caractère du modèle à travers le traitement des volumes du visage.",
+    videoEmbed: 'https://www.youtube.com/embed/4BLzg7KejO4',
+  },
+];
+
+// ============================================================
+// LE CATALOGUE DES TABLEAUX
+// ============================================================
+const catalogueTableaux = [
+  {
+    id: 'tableau_1',
+    nom: 'Les Tournesols',
+    fichier: 'models/les_tournesols.glb',
+    categorie: 'Peinture — Post-impressionnisme',
+    annee: '1888',
+    description: "Reconstitution du célèbre tableau de Vincent van Gogh, l'une des œuvres les plus emblématiques du mouvement post-impressionniste. La série des Tournesols illustre la fascination de l'artiste pour la couleur jaune et la lumière du Sud de la France, peinte durant son séjour à Arles.",
+    defaut: true,
+    videoEmbed: 'https://www.youtube.com/embed/iI7HD2uF0x0',
+  },
+  {
+    id: 'tableau_2',
+    nom: 'La Gare Saint-Lazare',
+    fichier: 'models/deco_cadre_-_la_gare_st_lazare_monet.glb',
+    categorie: 'Peinture — Impressionnisme',
+    annee: '1877',
+    description: "Œuvre de Claude Monet représentant la gare Saint-Lazare à Paris, l'une des huit toiles de la série consacrée à ce lieu. Monet y capture la vapeur, la lumière et le mouvement ferroviaire, symboles de la modernité industrielle de son époque.",
+    defaut: true,
+    videoEmbed: 'https://www.youtube.com/embed/BfEQbmWC4Xk',
+  },
+  {
+    id: 'tableau_3',
+    nom: 'Gyé Nyame',
+    fichier: 'models/tableau_gye_nyame.glb',
+    categorie: 'Symbole culturel — Art akan (Ghana)',
+    annee: 'Tradition ancienne (origine précoloniale)',
+    description: "Représentation d'un symbole Adinkra du peuple Akan, originaire du Ghana. Gyé Nyame signifie Excepté Dieu et symbolise la suprématie divine et la toute-puissance spirituelle. Ce motif figure parmi les plus répandus et les plus vénérés de l'iconographie Adinkra.",
+    defaut: false,
+    videoEmbed: 'https://www.youtube.com/embed/cCsMTTc0beg', // ⚠️ exemple — remplace par le lien embed de TA vidéo
+    correctionRotationY: 0, // ⚠️ corrige l'orientation "perpendiculaire" — ajuste si besoin (voir note ci-dessous)
+  },
+  {
+    id: 'tableau_4',
+    nom: 'La Gare Saint-Lazare',
+    fichier: 'models/deco_cadre_-_la_gare_st_lazare_monet.glb',
+    categorie: 'Peinture — Impressionnisme',
+    annee: '1877',
+    description: "Œuvre de Claude Monet représentant la gare Saint-Lazare à Paris, l'une des huit toiles de la série consacrée à ce lieu. Monet y capture la vapeur, la lumière et le mouvement ferroviaire, symboles de la modernité industrielle de son époque.",
+    defaut: false,
+  },
+ 
+  {
+    id: 'tableau_6',
+    nom: 'Paysage',
+    fichier: 'models/tableau_paysage.glb',
+    categorie: 'Peinture — Paysagisme',
+    annee: '',
+    description: "Étude paysagère explorant la représentation de la nature à travers la composition, la lumière et la profondeur. Le genre du paysage occupe une place centrale dans l'histoire de la peinture occidentale depuis le XVIIe siècle.",
+    defaut: false,
+    correctionRotationY: -Math.PI / 2, // ⚠️ corrige l'orientation "perpendiculaire" — ajuste si besoin (voir note ci-dessous)
   },
 ];
 
 // ============================================================
 // CHARGEMENT DES MODÈLES .glb
 // ============================================================
-// GLTFLoader lit le fichier .glb et nous donne une "scène" 3D
-// qu'on peut ensuite dupliquer (.clone()) autant de fois qu'on veut.
 const loader = new GLTFLoader();
+const modelesCharges = {};
 
-// On stocke ici les modèles déjà chargés, pour ne pas les recharger
-// à chaque clic (chargement une seule fois, réutilisation ensuite).
-const modelesCharges = {}; // ex: { objet1: <Object3D> }
-
-function chargerModele(item) {
+function chargerModele(item, mode = 'hauteur') {
   return new Promise((resolve, reject) => {
-    // Si déjà chargé, on renvoie directement une copie
     if (modelesCharges[item.id]) {
       resolve(modelesCharges[item.id].clone());
       return;
     }
 
     loader.load(
-      item.fichier + '?v=' + Date.now(), // cache-bust : force le navigateur à recharger le vrai fichier à chaque fois (utile pendant que tu modifies tes .glb)
+      item.fichier + '?v=' + Date.now(),
       (gltf) => {
         const modele = gltf.scene;
 
-        // On uniformise la taille : chaque modèle Blender/Sketchfab
-        // arrive avec une échelle différente, donc on la recalcule
-        // pour que l'objet fasse toujours ~1.5 unité de haut.
         const box = new THREE.Box3().setFromObject(modele);
         const taille = new THREE.Vector3();
         box.getSize(taille);
-        const hauteurCible = 1.5;
-        const facteur = hauteurCible / (taille.y || 1);
-        modele.scale.setScalar(facteur);
 
-        // Les ombres : on les active sur chaque partie du modèle
+        if (mode === 'max') {
+          const dimensionMax = Math.max(taille.x, taille.y, taille.z) || 1;
+          modele.scale.setScalar(1.3 / dimensionMax);
+        } else {
+          const hauteurCible = 1.5;
+          modele.scale.setScalar(hauteurCible / (taille.y || 1));
+        }
+
         modele.traverse((child) => {
           if (child.isMesh) {
             child.castShadow = true;
@@ -256,19 +350,46 @@ function chargerModele(item) {
         modelesCharges[item.id] = modele;
         resolve(modele.clone());
       },
-      undefined, // callback de progression (pas utilisé ici)
+      undefined,
       (erreur) => reject(erreur)
     );
   });
 }
 
 // ============================================================
-// LE PANNEAU COLLECTION (liste des objets à gauche)
+// ACCROCHAGE DES TABLEAUX PAR DÉFAUT
+// ============================================================
+async function accrocherTableau(item, emplacement) {
+  try {
+    const modele = await chargerModele(item, 'max');
+    modele.position.set(emplacement.x, emplacement.y, emplacement.z);
+    modele.rotation.y = emplacement.rotationY + (item.correctionRotationY || 0);
+    scene.add(modele);
+
+    emplacement.occupe = true;
+    emplacement.mesh = modele;
+    emplacement.repereGroupe.visible = false;
+
+    objetsExposes.push({ mesh: modele, item, emplacement });
+    nombreObjetsExposes++;
+    mettreAJourCompteur();
+  } catch (erreur) {
+    console.error(`Impossible de charger le tableau ${item.fichier} :`, erreur);
+  }
+}
+
+const tableauxParDefaut = catalogueTableaux.filter((t) => t.defaut);
+tableauxParDefaut.forEach((item, i) => {
+  if (emplacementsMuraux[i]) accrocherTableau(item, emplacementsMuraux[i]);
+});
+
+// ============================================================
+// LE PANNEAU COLLECTION
 // ============================================================
 const collectionList = document.getElementById('collection-list');
 const collectionCount = document.getElementById('collection-count');
 const objectCounter = document.getElementById('object-counter');
-let objetSelectionne = null; // quel item du catalogue est actuellement sélectionné
+let selection = null;
 let nombreObjetsExposes = 0;
 
 function mettreAJourCompteur() {
@@ -276,65 +397,100 @@ function mettreAJourCompteur() {
   objectCounter.textContent = `${nombreObjetsExposes} ${mot}`;
 }
 
-collectionCount.textContent = `${catalogue.length} objet${catalogue.length > 1 ? 's' : ''} disponible${catalogue.length > 1 ? 's' : ''}`;
+const tableauxAjoutables = catalogueTableaux.filter((t) => !t.defaut);
+const totalDisponible = catalogueSculptures.length + tableauxAjoutables.length;
+collectionCount.textContent = `${totalDisponible} pièce${totalDisponible > 1 ? 's' : ''} disponible${totalDisponible > 1 ? 's' : ''}`;
 
-catalogue.forEach((item) => {
-  const li = document.createElement('li');
-  li.className = 'collection-item';
-  li.innerHTML = `<span class="item-nom">${item.nom}</span><span class="item-categorie">${item.categorie}</span>`;
-  li.addEventListener('click', () => {
-    document.querySelectorAll('.collection-item').forEach((el) => el.classList.remove('selected'));
-    li.classList.add('selected');
-    objetSelectionne = item;
+function ajouterSectionCollection(titre, items, type) {
+  const titreEl = document.createElement('li');
+  titreEl.className = 'collection-section-titre';
+  titreEl.textContent = titre;
+  collectionList.appendChild(titreEl);
+
+  items.forEach((item) => {
+    const li = document.createElement('li');
+    li.className = 'collection-item';
+    li.innerHTML = `<span class="item-nom">${item.nom}</span><span class="item-categorie">${item.categorie}</span>`;
+    li.addEventListener('click', () => {
+      document.querySelectorAll('.collection-item').forEach((el) => el.classList.remove('selected'));
+      li.classList.add('selected');
+      selection = { item, type };
+    });
+    collectionList.appendChild(li);
   });
-  collectionList.appendChild(li);
-});
+}
+
+ajouterSectionCollection('Sculptures', catalogueSculptures, 'sculpture');
+if (tableauxAjoutables.length > 0) {
+  ajouterSectionCollection('Tableaux', tableauxAjoutables, 'tableau');
+}
 
 // ============================================================
-// SUIVI DES OBJETS POSÉS DANS LA SCÈNE
+// SUIVI DES OBJETS POSÉS
 // ============================================================
-// Chaque entrée : { mesh: <Object3D dans la scène>, item: <infos du catalogue> }
 const objetsExposes = [];
 
 // ============================================================
-// LA FICHE D'INFORMATION (panneau qui apparaît au clic sur un objet posé)
+// LA FICHE D'INFORMATION
 // ============================================================
 const infoPanel = document.getElementById('info-panel');
 const infoNom = document.getElementById('info-nom');
 const infoCategorie = document.getElementById('info-categorie');
 const infoDescription = document.getElementById('info-description');
+const infoVideo = document.getElementById('info-video');
+const infoVideoEmbedWrapper = document.getElementById('info-video-embed-wrapper');
+const infoVideoEmbed = document.getElementById('info-video-embed');
 const infoClose = document.getElementById('info-close');
 const infoView = document.getElementById('info-view');
 
-let objetActuellementAffiche = null; // le mesh de l'objet dont la fiche est ouverte
+let objetActuellementAffiche = null;
 
 function afficherFiche(item, mesh) {
   infoNom.textContent = item.nom;
   infoCategorie.textContent = `${item.categorie} · ${item.annee}`;
   infoDescription.textContent = item.description;
+
+  // Cas 1 : fichier vidéo direct (hébergé dans models/videos/)
+  if (item.video) {
+    infoVideo.src = item.video;
+    infoVideo.style.display = 'block';
+  } else {
+    infoVideo.pause();
+    infoVideo.removeAttribute('src');
+    infoVideo.style.display = 'none';
+  }
+
+  // Cas 2 : lien "embed" externe (Dailymotion, YouTube...) — pas besoin de fichier
+  if (item.videoEmbed) {
+    infoVideoEmbed.src = item.videoEmbed;
+    infoVideoEmbedWrapper.style.display = 'block';
+  } else {
+    infoVideoEmbed.removeAttribute('src'); // coupe la lecture en retirant le src
+    infoVideoEmbedWrapper.style.display = 'none';
+  }
+
   infoPanel.classList.add('visible');
   objetActuellementAffiche = mesh;
 }
 
 function fermerFiche() {
   infoPanel.classList.remove('visible');
+  infoVideo.pause();
+  infoVideoEmbed.removeAttribute('src'); // coupe la lecture de l'iframe en fermant la fiche
   objetActuellementAffiche = null;
 }
 
 infoClose.addEventListener('click', fermerFiche);
 
 // ============================================================
-// "VOIR L'OBJET" — anime la caméra pour se rapprocher de l'objet
+// "VOIR L'OBJET"
 // ============================================================
-// On interpole (lerp) progressivement la position de la caméra et
-// le point qu'elle regarde, image par image, plutôt qu'un saut brutal.
-let animationCamera = null; // { depart, arrivee, cibleDepart, cibleArrivee, t }
+let animationCamera = null;
 
 function voirObjet(mesh) {
   const positionObjet = new THREE.Vector3();
   mesh.getWorldPosition(positionObjet);
 
-  // Position caméra cible : reculée par rapport à l'objet, légèrement en hauteur
   const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
   const nouvellePosition = positionObjet.clone().add(direction.multiplyScalar(3.2)).add(new THREE.Vector3(0, 0.8, 0));
 
@@ -352,7 +508,7 @@ infoView.addEventListener('click', () => {
 });
 
 // ============================================================
-// "RETIRER DE L'EXPOSITION" — enlève seulement l'objet affiché dans la fiche
+// "RETIRER DE L'EXPOSITION"
 // ============================================================
 const infoRemove = document.getElementById('info-remove');
 
@@ -364,7 +520,11 @@ infoRemove.addEventListener('click', () => {
 
   const [objetRetire] = objetsExposes.splice(index, 1);
   scene.remove(objetRetire.mesh);
-  if (objetRetire.socle) objetRetire.socle.occupe = false; // le socle redevient disponible
+  if (objetRetire.socle) objetRetire.socle.occupe = false;
+  if (objetRetire.emplacement) {
+    objetRetire.emplacement.occupe = false;
+    objetRetire.emplacement.repereGroupe.visible = true;
+  }
 
   nombreObjetsExposes--;
   mettreAJourCompteur();
@@ -372,20 +532,24 @@ infoRemove.addEventListener('click', () => {
 });
 
 // ============================================================
-// BOUTON RESET — retire tous les objets exposés
+// BOUTON RESET
 // ============================================================
 const resetBtn = document.getElementById('reset-btn');
 resetBtn.addEventListener('click', () => {
   objetsExposes.forEach((o) => {
     scene.remove(o.mesh);
-    if (o.socle) o.socle.occupe = false; // on libère le socle s'il y en avait un
+    if (o.socle) o.socle.occupe = false;
+    if (o.emplacement) {
+      o.emplacement.occupe = false;
+      o.emplacement.repereGroupe.visible = true;
+    }
   });
-  objetsExposes.length = 0; // vide le tableau
+  objetsExposes.length = 0;
   nombreObjetsExposes = 0;
   mettreAJourCompteur();
   fermerFiche();
   document.querySelectorAll('.collection-item').forEach((el) => el.classList.remove('selected'));
-  objetSelectionne = null;
+  selection = null;
 });
 
 // ============================================================
@@ -398,11 +562,11 @@ const aboutClose = document.getElementById('about-close');
 navAbout.addEventListener('click', () => aboutOverlay.classList.add('visible'));
 aboutClose.addEventListener('click', () => aboutOverlay.classList.remove('visible'));
 aboutOverlay.addEventListener('click', (e) => {
-  if (e.target === aboutOverlay) aboutOverlay.classList.remove('visible'); // clic en dehors du modal = ferme
+  if (e.target === aboutOverlay) aboutOverlay.classList.remove('visible');
 });
 
 // ============================================================
-// RAYCASTER : détecte ce que la souris touche dans la scène
+// RAYCASTER
 // ============================================================
 const raycaster = new THREE.Raycaster();
 const pointeur = new THREE.Vector2();
@@ -412,12 +576,10 @@ canvas.addEventListener('click', async (event) => {
   pointeur.y = -(event.clientY / window.innerHeight) * 2 + 1;
   raycaster.setFromCamera(pointeur, camera);
 
-  // --- PRIORITÉ 1 : a-t-on cliqué sur un objet déjà exposé ? ---
   const meshesExposes = objetsExposes.map((o) => o.mesh);
-  const hitsObjets = raycaster.intersectObjects(meshesExposes, true); // true = regarde aussi dans les enfants du modèle
+  const hitsObjets = raycaster.intersectObjects(meshesExposes, true);
 
   if (hitsObjets.length > 0) {
-    // On remonte jusqu'à trouver à quel "objetExposé" appartient la pièce touchée
     const meshTouche = hitsObjets[0].object;
     const trouve = objetsExposes.find((o) => {
       let appartient = false;
@@ -425,69 +587,85 @@ canvas.addEventListener('click', async (event) => {
       return appartient;
     });
     if (trouve) afficherFiche(trouve.item, trouve.mesh);
-    return; // on s'arrête là : on ne pose pas un nouvel objet par-dessus
+    return;
   }
 
-  if (!objetSelectionne) return; // rien à poser si aucun objet choisi dans le panneau Collection
+  if (!selection) return;
 
-  // --- PRIORITÉ 2 : a-t-on cliqué sur un socle libre ? ---
-  const meshesSocles = socles.filter((s) => !s.occupe).map((s) => s.mesh);
-  const hitsSocles = raycaster.intersectObjects(meshesSocles, true);
+  if (selection.type === 'sculpture') {
+    const meshesSocles = socles.filter((s) => !s.occupe).map((s) => s.mesh);
+    const hitsSocles = raycaster.intersectObjects(meshesSocles, true);
+    if (hitsSocles.length === 0) return;
 
-  if (hitsSocles.length > 0) {
     const socleTouche = socles.find((s) => s.mesh === hitsSocles[0].object);
-
     try {
-      const modele = await chargerModele(objetSelectionne);
-      // On pose l'objet exactement au centre du socle, en haut de celui-ci (y = hauteur du socle)
+      const modele = await chargerModele(selection.item, 'hauteur');
       modele.position.set(socleTouche.mesh.position.x, socleHauteur, socleTouche.mesh.position.z);
       scene.add(modele);
 
       socleTouche.occupe = true;
-      objetsExposes.push({ mesh: modele, item: objetSelectionne, socle: socleTouche });
+      objetsExposes.push({ mesh: modele, item: selection.item, socle: socleTouche });
 
       nombreObjetsExposes++;
       mettreAJourCompteur();
     } catch (erreur) {
       console.error('Impossible de charger le modèle :', erreur);
-      alert("Erreur : le fichier " + objetSelectionne.fichier + " est introuvable ou invalide.");
+      alert("Erreur : le fichier " + selection.item.fichier + " est introuvable ou invalide.");
+    }
+  } else if (selection.type === 'tableau') {
+    const reperesLibres = emplacementsMuraux.filter((e) => !e.occupe).map((e) => e.repere);
+    const hitsEmplacements = raycaster.intersectObjects(reperesLibres, true);
+    if (hitsEmplacements.length === 0) return;
+
+    const emplacementTouche = emplacementsMuraux.find((e) => e.repere === hitsEmplacements[0].object);
+    try {
+      const modele = await chargerModele(selection.item, 'max');
+      modele.position.set(emplacementTouche.x, emplacementTouche.y, emplacementTouche.z);
+      modele.rotation.y = emplacementTouche.rotationY + (selection.item.correctionRotationY || 0);
+      scene.add(modele);
+
+      emplacementTouche.occupe = true;
+      emplacementTouche.mesh = modele;
+      emplacementTouche.repereGroupe.visible = false;
+
+      objetsExposes.push({ mesh: modele, item: selection.item, emplacement: emplacementTouche });
+
+      nombreObjetsExposes++;
+      mettreAJourCompteur();
+    } catch (erreur) {
+      console.error('Impossible de charger le tableau :', erreur);
+      alert("Erreur : le fichier " + selection.item.fichier + " est introuvable ou invalide.");
     }
   }
-  // Si le clic n'a touché ni un objet, ni un socle libre : on ne fait rien.
-  // (avant, on posait l'objet n'importe où sur le sol — supprimé volontairement :
-  // le placement doit se faire uniquement sur un socle, plus cohérent avec le concept musée)
 });
 
 // ============================================================
 // LA BOUCLE D'ANIMATION
 // ============================================================
-// Un jeu/site 3D redessine l'écran ~60 fois par seconde.
-// requestAnimationFrame appelle notre fonction juste avant le prochain rafraîchissement d'écran.
 function animate() {
   requestAnimationFrame(animate);
 
-  // Si une animation "voir l'objet" est en cours, on avance l'interpolation
   if (animationCamera) {
-    animationCamera.t += 0.04; // vitesse de l'animation (plus petit = plus lent)
+    animationCamera.t += 0.04;
     const t = Math.min(animationCamera.t, 1);
-    const easing = 1 - Math.pow(1 - t, 3); // "ease-out" : rapide au début, ralentit à la fin
+    const easing = 1 - Math.pow(1 - t, 3);
 
     camera.position.lerpVectors(animationCamera.depart, animationCamera.arrivee, easing);
     controls.target.lerpVectors(animationCamera.cibleDepart, animationCamera.cibleArrivee, easing);
 
-    if (t >= 1) animationCamera = null; // animation terminée
+    if (t >= 1) animationCamera = null;
   }
 
-  controls.update(); // nécessaire car enableDamping = true
+  controls.update();
   renderer.render(scene, camera);
 }
 animate();
 
 // ============================================================
-// RESPONSIVE : si la fenêtre change de taille
+// RESPONSIVE
 // ============================================================
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix(); // obligatoire après avoir changé aspect/fov
+  camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
