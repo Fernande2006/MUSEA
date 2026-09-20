@@ -38,6 +38,15 @@ introEnter.addEventListener('click', () => {
 });
 
 // ============================================================
+// BANDEAU D'INSTRUCTIONS — peut être fermé manuellement
+// ============================================================
+const instructionsBar = document.getElementById('instructions-bar');
+const instructionsClose = document.getElementById('instructions-close');
+instructionsClose.addEventListener('click', () => {
+  instructionsBar.classList.add('hidden');
+});
+
+// ============================================================
 // LES CONTRÔLES DE CAMÉRA (souris)
 // ============================================================
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -285,19 +294,9 @@ const catalogueTableaux = [
     annee: 'Tradition ancienne (origine précoloniale)',
     description: "Représentation d'un symbole Adinkra du peuple Akan, originaire du Ghana. Gyé Nyame signifie Excepté Dieu et symbolise la suprématie divine et la toute-puissance spirituelle. Ce motif figure parmi les plus répandus et les plus vénérés de l'iconographie Adinkra.",
     defaut: false,
-    videoEmbed: 'https://www.youtube.com/embed/cCsMTTc0beg', // ⚠️ exemple — remplace par le lien embed de TA vidéo
-    correctionRotationY: 0, // ⚠️ corrige l'orientation "perpendiculaire" — ajuste si besoin (voir note ci-dessous)
+    videoEmbed: 'https://www.youtube.com/embed/cCsMTTc0beg',
+    correctionRotationY: 0,
   },
-  {
-    id: 'tableau_4',
-    nom: 'La Gare Saint-Lazare',
-    fichier: 'models/deco_cadre_-_la_gare_st_lazare_monet.glb',
-    categorie: 'Peinture — Impressionnisme',
-    annee: '1877',
-    description: "Œuvre de Claude Monet représentant la gare Saint-Lazare à Paris, l'une des huit toiles de la série consacrée à ce lieu. Monet y capture la vapeur, la lumière et le mouvement ferroviaire, symboles de la modernité industrielle de son époque.",
-    defaut: false,
-  },
- 
   {
     id: 'tableau_6',
     nom: 'Paysage',
@@ -306,7 +305,7 @@ const catalogueTableaux = [
     annee: '',
     description: "Étude paysagère explorant la représentation de la nature à travers la composition, la lumière et la profondeur. Le genre du paysage occupe une place centrale dans l'histoire de la peinture occidentale depuis le XVIIe siècle.",
     defaut: false,
-    correctionRotationY: -Math.PI / 2, // ⚠️ corrige l'orientation "perpendiculaire" — ajuste si besoin (voir note ci-dessous)
+    correctionRotationY: -Math.PI / 2,
   },
 ];
 
@@ -415,6 +414,7 @@ function ajouterSectionCollection(titre, items, type) {
       document.querySelectorAll('.collection-item').forEach((el) => el.classList.remove('selected'));
       li.classList.add('selected');
       selection = { item, type };
+      replierTiroirCollectionSiMobile();
     });
     collectionList.appendChild(li);
   });
@@ -423,6 +423,26 @@ function ajouterSectionCollection(titre, items, type) {
 ajouterSectionCollection('Sculptures', catalogueSculptures, 'sculpture');
 if (tableauxAjoutables.length > 0) {
   ajouterSectionCollection('Tableaux', tableauxAjoutables, 'tableau');
+}
+
+// ============================================================
+// TIROIR COLLECTION (mobile) — la poignée ouvre/ferme le panneau.
+// Sur desktop, la media query ignore la classe "expanded" (le
+// panneau reste toujours visible), donc ce code est sans effet.
+// ============================================================
+const collectionPanel = document.getElementById('collection-panel');
+const collectionHandle = document.getElementById('collection-handle');
+
+collectionHandle.addEventListener('click', () => {
+  collectionPanel.classList.toggle('expanded');
+});
+
+// Une fois une pièce choisie sur mobile, on replie le tiroir
+// pour laisser la place à la scène 3D et au socle à cliquer.
+function replierTiroirCollectionSiMobile() {
+  if (window.innerWidth <= 780) {
+    collectionPanel.classList.remove('expanded');
+  }
 }
 
 // ============================================================
@@ -471,6 +491,7 @@ function afficherFiche(item, mesh) {
 
   infoPanel.classList.add('visible');
   objetActuellementAffiche = mesh;
+  reinitialiserBoutonRetrait();
 }
 
 function fermerFiche() {
@@ -478,6 +499,7 @@ function fermerFiche() {
   infoVideo.pause();
   infoVideoEmbed.removeAttribute('src'); // coupe la lecture de l'iframe en fermant la fiche
   objetActuellementAffiche = null;
+  reinitialiserBoutonRetrait();
 }
 
 infoClose.addEventListener('click', fermerFiche);
@@ -511,9 +533,26 @@ infoView.addEventListener('click', () => {
 // "RETIRER DE L'EXPOSITION"
 // ============================================================
 const infoRemove = document.getElementById('info-remove');
+let minuteurConfirmationRetrait = null;
+
+// Le retrait est destructif : un clic accidentel sur ce bouton (proche de
+// "Voir l'objet") supprimait auparavant l'objet sans avertissement. On
+// demande maintenant un second clic explicite dans les 3 secondes.
+function reinitialiserBoutonRetrait() {
+  clearTimeout(minuteurConfirmationRetrait);
+  infoRemove.dataset.state = 'idle';
+  infoRemove.textContent = 'Retirer de l\'exposition';
+}
 
 infoRemove.addEventListener('click', () => {
   if (!objetActuellementAffiche) return;
+
+  if (infoRemove.dataset.state !== 'confirm') {
+    infoRemove.dataset.state = 'confirm';
+    infoRemove.textContent = 'Confirmer le retrait ?';
+    minuteurConfirmationRetrait = setTimeout(reinitialiserBoutonRetrait, 3000);
+    return;
+  }
 
   const index = objetsExposes.findIndex((o) => o.mesh === objetActuellementAffiche);
   if (index === -1) return;

@@ -6,18 +6,22 @@
    accent secondaire pour un peu de fraîcheur/contraste.
    ============================================================ */
 :root {
-  --bg-fond:        #16181D; /* charbon froid, neutre — plus clair que le tout premier noir, mais pas brun */
-  --panneau:        #1E2128; /* panneaux/barres */
-  --panneau-clair:  #272B34; /* survol, cartes */
-  --bordure:        #383C46; /* bordures visibles */
+  --bg-fond:        #15171C; /* charbon froid, neutre */
+  --panneau:        #1D2027; /* panneaux/barres */
+  --panneau-clair:  #262A33; /* survol, cartes */
+  --bordure:        #363A44; /* bordures visibles */
 
-  --texte:          #F2EFE8; /* crème clair, neutre */
-  --texte-discret:  #9C9AA3; /* gris froid pour texte secondaire */
+  --texte:          #F1EDE4; /* crème clair, neutre */
+  --texte-discret:  #96939C; /* gris froid pour texte secondaire */
 
-  --accent:         #D6A24A; /* doré/ambre — chaud mais pas rouge, contraste net sur le fond froid */
-  --accent-clair:   #E8BE72; /* variante claire, survol */
-  --accent-secondaire: #4A6FA5; /* bleu ardoise — pour badges/catégories, apporte de la fraîcheur */
-  --contraste:      #09152D; /* bleu marine profond — touche ponctuelle */
+  --accent:         #C9A24A; /* doré/ambre — chaud mais pas rouge, contraste net sur le fond froid */
+  --accent-clair:   #DFC17E; /* variante claire, survol */
+  --accent-secondaire: #4A6FA5; /* bleu ardoise — pour badges/catégories */
+  --danger:         #B5544A; /* terracotta assourdi — réservé aux actions destructrices */
+  --danger-clair:   #D97468;
+
+  --police-titre: 'Fraunces', Georgia, serif;
+  --police-texte: 'Manrope', 'Helvetica Neue', Arial, sans-serif;
 }
 
 /* Reset simple : on enlève les marges par défaut du navigateur */
@@ -27,13 +31,33 @@
   box-sizing: border-box;
 }
 
+button {
+  font-family: inherit;
+}
+
 html, body {
   width: 100%;
   height: 100%;
   overflow: hidden; /* pas de scroll, la scène 3D remplit l'écran */
   background: var(--bg-fond);
   color: var(--texte);
-  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--police-texte);
+}
+
+/* Pictogramme du logo (colonnes de fronton, esprit "musée") */
+.logo-mark {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.logo-mark--large {
+  width: 44px;
+  height: 44px;
+  margin: 0 auto;
+  opacity: 0;
+  animation: intro-apparition 0.9s ease forwards;
 }
 
 /* Le canvas prend TOUT l'écran, en arrière-plan */
@@ -76,10 +100,10 @@ html, body {
 }
 
 .intro-logo {
-  font-size: 2.6rem;
-  font-weight: 300;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
+  font-family: var(--police-titre);
+  font-size: 2.8rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
   color: var(--texte);
   opacity: 0; /* état de départ avant l'animation */
   animation: intro-apparition 0.9s ease forwards;
@@ -92,8 +116,7 @@ html, body {
 
 .intro-tagline {
   font-size: 0.85rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
+  letter-spacing: 0.03em;
   color: var(--texte-discret);
   margin-bottom: 18px;
   opacity: 0;
@@ -102,9 +125,10 @@ html, body {
 }
 
 .intro-quote {
-  font-size: 0.95rem;
+  font-family: var(--police-titre);
+  font-style: italic;
+  font-size: 1rem;
   color: var(--accent);
-  letter-spacing: 0.05em;
   margin-bottom: 30px;
   opacity: 0;
   animation: intro-apparition 0.9s ease forwards;
@@ -149,19 +173,26 @@ html, body {
   pointer-events: none; /* la scène 3D reste cliquable en dessous */
 }
 
-/* Bloc de gauche : logo + tagline */
+/* Bloc de gauche : pictogramme + logo + tagline */
 .header-brand {
   display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-brand-text {
+  display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
 }
 
 .logo {
-  font-size: 1.5rem;
-  font-weight: 300;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  font-family: var(--police-titre);
+  font-size: 1.4rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
   color: var(--texte);
+  line-height: 1;
 }
 
 .logo span {
@@ -169,9 +200,8 @@ html, body {
 }
 
 .tagline {
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
   color: var(--texte-discret);
 }
 
@@ -179,14 +209,13 @@ html, body {
 .header-nav {
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 24px;
   pointer-events: all;
 }
 
 .header-nav .nav-link {
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 0.82rem;
+  letter-spacing: 0.01em;
   color: var(--texte-discret);
   text-decoration: none;
   transition: color 0.2s;
@@ -202,30 +231,55 @@ html, body {
 
 /* Petit badge qui affiche le nombre d'objets exposés */
 #object-counter {
-  font-size: 0.7rem;
-  letter-spacing: 0.05em;
+  font-size: 0.72rem;
   color: var(--bg-fond);
   background: var(--accent);
   padding: 5px 12px;
   border-radius: 20px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
-/* Bandeau d'instructions, sous le header, discret */
+/* Bandeau d'instructions, sous le header, discret et toujours centré */
 #instructions-bar {
   position: fixed;
-  top: 68px;
-  left: 940px;
+  top: 84px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 10;
-  font-size: 0.78rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.8rem;
   color: var(--texte-discret);
   border-left: 2px solid var(--accent);
-  padding: 6px 12px;
-  background: rgba(22, 24, 29, 0.75); /* fond propre : lisible même sur une scène claire */
-  border-radius: 0 3px 3px 0;
-  pointer-events: none;
-  max-width: 480px;
+  padding: 8px 10px 8px 14px;
+  background: rgba(22, 24, 29, 0.85);
+  border-radius: 3px;
+  max-width: min(480px, 90vw);
   line-height: 1.5;
+  transition: opacity 0.25s, transform 0.25s;
+}
+
+#instructions-bar.hidden {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-8px);
+  pointer-events: none;
+}
+
+#instructions-close {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--texte-discret);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+#instructions-close:hover {
+  color: var(--accent);
 }
 
 /* ============================================================
@@ -238,25 +292,48 @@ html, body {
   z-index: 15;
   width: 240px;
   max-height: calc(100vh - 150px); /* laisse de la marge en bas, quel que soit le nombre de pièces */
-  overflow-y: auto; /* scroll interne si la liste dépasse (7+ pièces) */
-  background: rgba(30, 33, 40, 0.9);
+  background: rgba(30, 33, 40, 0.92);
   border: 1px solid var(--bordure);
   border-radius: 4px;
   padding: 20px;
   pointer-events: all;
+  display: flex;
+  flex-direction: column;
+}
+
+#collection-body {
+  overflow-y: auto; /* scroll interne si la liste dépasse (7+ pièces) */
+}
+
+#collection-handle {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: default;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+
+.handle-bar {
+  display: none; /* visible seulement en version tiroir mobile */
 }
 
 .collection-title {
-  font-size: 0.85rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-family: var(--police-titre);
+  font-size: 1rem;
+  font-weight: 500;
   color: var(--texte);
 }
 
 .collection-sub {
   font-size: 0.72rem;
   color: var(--texte-discret);
-  margin-top: 2px;
   margin-bottom: 14px;
 }
 
@@ -372,17 +449,17 @@ html, body {
 }
 
 #about-modal h2 {
-  font-size: 1.4rem;
-  font-weight: 300;
-  letter-spacing: 0.15em;
-  margin-bottom: 8px;
+  font-family: var(--police-titre);
+  font-size: 1.6rem;
+  font-weight: 500;
+  margin-bottom: 6px;
 }
 
 .about-lead {
+  font-family: var(--police-titre);
+  font-style: italic;
   color: var(--accent);
-  font-size: 0.8rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 0.95rem;
   margin-bottom: 18px;
 }
 
@@ -390,6 +467,21 @@ html, body {
   font-size: 0.9rem;
   line-height: 1.6;
   color: var(--texte-discret);
+  margin-bottom: 12px;
+}
+
+.about-credit {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--bordure);
+  font-size: 0.78rem;
+  color: var(--texte-discret);
+  display: flex;
+  gap: 8px;
+}
+
+.about-credit-sep {
+  color: var(--accent);
 }
 
 #about-close {
@@ -560,10 +652,134 @@ html, body {
 }
 
 #info-remove:hover {
-  border-color: #b5544a;
-  color: #d97468;
+  border-color: var(--danger);
+  color: var(--danger-clair);
+}
+
+/* Second état : après un premier clic, on demande confirmation avant de retirer réellement */
+#info-remove[data-state="confirm"] {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: var(--texte);
+}
+
+#info-remove[data-state="confirm"]:hover {
+  background: var(--danger-clair);
+  border-color: var(--danger-clair);
 }
 
 /* ============================================================
    BARRE DU BAS — supprimée (remplacée par #collection-panel à gauche)
    ============================================================ */
+
+/* ============================================================
+   RESPONSIVE — MOBILE / PETITS ÉCRANS (≤ 780px)
+   Le panneau Collection devient un tiroir escamotable en bas
+   d'écran plutôt qu'un panneau fixe à gauche (qui n'avait pas
+   la place de s'afficher correctement sur un téléphone).
+   ============================================================ */
+@media (max-width: 780px) {
+
+  #ui-header {
+    padding: 12px 16px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .logo-mark {
+    width: 24px;
+    height: 24px;
+  }
+
+  .logo {
+    font-size: 1.1rem;
+  }
+
+  .tagline {
+    display: none; /* superflu sur petit écran, la place manque */
+  }
+
+  .header-nav {
+    gap: 12px;
+  }
+
+  .header-nav .nav-link {
+    font-size: 0.72rem;
+  }
+
+  #object-counter {
+    font-size: 0.65rem;
+    padding: 4px 9px;
+  }
+
+  #instructions-bar {
+    top: auto;
+    bottom: 78px; /* au-dessus de la poignée du tiroir collection */
+    max-width: 92vw;
+    font-size: 0.74rem;
+  }
+
+  /* --- Panneau Collection → tiroir du bas --- */
+  #collection-panel {
+    top: auto;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    max-height: 62vh;
+    border-radius: 12px 12px 0 0;
+    border-bottom: none;
+    padding: 14px 18px;
+    transform: translateY(calc(100% - 56px)); /* replié : seule la poignée dépasse */
+    transition: transform 0.3s ease;
+  }
+
+  #collection-panel.expanded {
+    transform: translateY(0);
+  }
+
+  #collection-handle {
+    cursor: pointer;
+    padding-bottom: 10px;
+  }
+
+  .handle-bar {
+    display: block;
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--bordure);
+    align-self: center;
+    margin: 0 auto 10px;
+  }
+
+  #collection-body {
+    max-height: calc(62vh - 70px);
+  }
+
+  /* --- Fiche d'info → plein écran sur mobile --- */
+  #info-panel {
+    width: 100%;
+    padding: 84px 22px 24px;
+  }
+
+  /* --- Bouton reset : au-dessus de la poignée du tiroir --- */
+  #reset-btn {
+    bottom: 78px;
+    right: 16px;
+    font-size: 0.68rem;
+    padding: 8px 14px;
+    transition: opacity 0.2s;
+  }
+
+  /* Le tiroir déployé recouvrirait le bouton reset : on l'efface le temps
+     que le tiroir soit ouvert plutôt que de le laisser flotter dessus. */
+  #collection-panel.expanded ~ #reset-btn {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #about-modal {
+    padding: 28px 22px;
+  }
+}

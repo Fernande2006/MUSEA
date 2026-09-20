@@ -4,12 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Musée Virtuel 3D</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,400&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
   <!-- Écran d'intro : plein écran, au-dessus de tout, disparaît au clic sur "Entrer" -->
   <div id="intro-screen">
+    <svg class="logo-mark logo-mark--large" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6 18L24 7L42 18" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+      <rect x="9" y="18" width="30" height="21" stroke="currentColor" stroke-width="1.6"/>
+      <line x1="15" y1="18" x2="15" y2="39" stroke="currentColor" stroke-width="1.6"/>
+      <line x1="33" y1="18" x2="33" y2="39" stroke="currentColor" stroke-width="1.6"/>
+    </svg>
     <div class="intro-logo">MUSEA<span>.</span></div>
     <div class="intro-tagline">Galerie virtuelle d'exposition</div>
     <p class="intro-quote">Explorez. Sélectionnez. Exposez.</p>
@@ -19,20 +28,29 @@
   <!-- Header : logo/tagline à gauche, nav + compteur à droite -->
   <header id="ui-header">
     <div class="header-brand">
-      <div class="logo">MUSEA<span>.</span></div>
-      <div class="tagline">Galerie virtuelle d'exposition</div>
+      <svg class="logo-mark" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6 18L24 7L42 18" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+        <rect x="9" y="18" width="30" height="21" stroke="currentColor" stroke-width="1.6"/>
+        <line x1="15" y1="18" x2="15" y2="39" stroke="currentColor" stroke-width="1.6"/>
+        <line x1="33" y1="18" x2="33" y2="39" stroke="currentColor" stroke-width="1.6"/>
+      </svg>
+      <div class="header-brand-text">
+        <div class="logo">MUSEA<span>.</span></div>
+        <div class="tagline">Galerie virtuelle d'exposition</div>
+      </div>
     </div>
 
     <nav class="header-nav">
+      <span id="object-counter">0 objet exposé</span>
       <button class="nav-link active">Exposition</button>
       <button class="nav-link" id="nav-about">À propos</button>
-      <span id="object-counter">0 objet exposé</span>
     </nav>
   </header>
 
   <!-- Bandeau d'instructions, sous le header -->
   <div id="instructions-bar">
-    Sélectionnez une pièce dans la collection, puis cliquez sur un socle pour l'exposer dans la galerie.
+    <span>Choisissez une pièce dans la collection, puis cliquez sur un socle ou un cadre pour l'exposer.</span>
+    <button id="instructions-close" aria-label="Fermer les instructions">&times;</button>
   </div>
 
   <!-- C'est ICI que Three.js va dessiner la scène 3D -->
@@ -51,16 +69,21 @@
     </div>
     <div class="info-actions">
       <button id="info-view">Voir l'objet</button>
-      <button id="info-remove">Retirer de l'exposition</button>
+      <button id="info-remove" data-state="idle">Retirer de l'exposition</button>
     </div>
   </aside>
 
   <!-- Panneau Collection, à gauche : liste des objets qu'on peut poser -->
   <aside id="collection-panel">
-    <div class="collection-title">Collection</div>
-    <div class="collection-sub" id="collection-count">0 objet disponible</div>
-    <ul id="collection-list"><!-- rempli par main.js --></ul>
-    <p class="collection-hint">Cliquez sur une pièce, puis sur un socle pour l'exposer.</p>
+    <button id="collection-handle">
+      <span class="handle-bar" aria-hidden="true"></span>
+      <span class="collection-title">Collection</span>
+      <span class="collection-sub" id="collection-count">0 objet disponible</span>
+    </button>
+    <div id="collection-body">
+      <ul id="collection-list"><!-- rempli par main.js --></ul>
+      <p class="collection-hint">Cliquez sur une pièce, puis sur un socle ou un cadre pour l'exposer.</p>
+    </div>
   </aside>
 
   <!-- Bouton de réinitialisation, en bas à droite -->
@@ -72,7 +95,13 @@
       <button id="about-close" aria-label="Fermer">&times;</button>
       <h2>MUSEA</h2>
       <p class="about-lead">Explorez. Sélectionnez. Exposez.</p>
-      <p>MUSEA est une galerie virtuelle 3D interactive qui permet de découvrir une collection d'objets numériques et de composer sa propre exposition, pièce par pièce.</p>
+      <p>MUSEA est une galerie virtuelle en 3D. Vous choisissez des pièces dans la collection — sculptures et tableaux — et vous composez votre propre exposition en les plaçant sur les socles et les cadres de la salle.</p>
+      <p>Cliquez sur un objet déjà exposé pour lire sa fiche : catégorie, description, et une vidéo de présentation quand elle existe. Vous pouvez à tout moment retirer une pièce ou réinitialiser toute l'exposition.</p>
+      <div class="about-credit">
+        <span>Un projet de Fernande</span>
+        <span class="about-credit-sep">·</span>
+        <span>Three.js</span>
+      </div>
     </div>
   </div>
 
